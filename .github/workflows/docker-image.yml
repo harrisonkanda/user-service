@@ -23,11 +23,16 @@ jobs:
         
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v5
+      
     - name: Build with Gradle
       run: ./gradlew build
       
-    - name: Login Docker
-      run: docker login -u "${{secrets.DOCKER.USERNAME}}" --password-stdin
+    - name: Login to Docker Hub
+      uses: docker/login-action@v4
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
     - name: Build Docker Image
       run: docker build -t ${{secrets.DOCKER.USERNAME}}/user-service:latest
       
