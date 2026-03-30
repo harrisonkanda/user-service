@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(
 		name = "Users",
-		description = "Read-only user directory. All responses are JSON. "
+		description = "V1. Read-only user directory. All responses are JSON. "
 				+ "Endpoints are intentionally unsecured for this milestone.")
 @RestController
 @RequestMapping("/api/users")
