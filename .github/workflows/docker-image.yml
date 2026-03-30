@@ -2,56 +2,53 @@ name: Docker Build -> Push -> Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-
   build-and-deploy:
     runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
-      
-    - name: Install jdk
-    - uses: actions/setup-java@v5
-      with:
-        distribution: 'temurin'
-        java-version: '21'
-        
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v5
-      
-    - name: Build with Gradle
-      run: 
-        chmod +x ./gradlew
-        ./gradlew build
-      
-    - name: Login to Docker Hub
-      uses: docker/login-action@v4
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-          
-    - name: Build Docker Image
-      run: docker build -t ${{secrets.DOCKERHUB_USERNAME}}/user-service:latest
-      
-    - name: Push Image to Docker Hub
-      run: docker push ${{ secrets.DOCKERHUB_USERNAME}}/user-service:latest
-    
-    - name: SSH and Deploy to EC2
-      uses: appleboy/ssh-action@v1
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          docker stop user-service || true
-          docker rm user-service || true
-          docker pull ${{secrets.DOCKERHUB_USERNAME}}/user-service:latest
-          docker run -d --name user-service -p 8082:8082 ${{secrets.DOCKERHUB_USERNAME}}/user-service:latest
-          
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build with Gradle
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker Image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/user-service:latest .
+
+      - name: Push Image to Docker Hub
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/user-service:latest
+
+      - name: SSH and Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker stop user-service || true
+            docker rm user-service || true
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-service:latest
+            docker run -d --name user-service -p 8082:8082 ${{ secrets.DOCKERHUB_USERNAME }}/user-service:latest
       
